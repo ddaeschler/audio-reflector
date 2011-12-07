@@ -33,8 +33,21 @@ namespace audioreflector
 
 	}
 
+	void ARClient::stop()
+	{
+		this->unsubscribeToServerStream();
+		_doStop = true;
+
+		//make sure the unsubscribe message is sent
+		boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+
+		_socket.close();
+	}
+
 	void ARClient::start()
 	{
+		_doStop = false;
+
 		this->initPortaudio();
 
 		udp::resolver resolver(_ioService);
@@ -117,7 +130,11 @@ namespace audioreflector
 		_netBuffer.rotate(_netBuffer.begin() + bytesPerBuffer);
 		_netBuffer.resize(_netBuffer.size() - bytesPerBuffer);
 
-		return paContinue;
+		if (_doStop) {
+			return paAbort;
+		} else {
+			return paContinue;
+		}
 	}
 
 	void ARClient::asioThreadRun()
@@ -126,9 +143,19 @@ namespace audioreflector
 
 		//send the subscribe message and begin receive
 		this->subscribeToServerStream();
+		this->beginRecv();
 
 		_ioService.run();
 		cout << "asio died" << endl;
+	}
+
+	void ARClient::unsubscribeToServerStream()
+	{
+		_socket.async_send_to(
+				boost::asio::buffer(ARClient::UnsubscribeMsg, 1), _remoteEndpoint,
+				boost::bind(&ARClient::handleSend, this,
+							boost::asio::placeholders::error,
+							boost::asio::placeholders::bytes_transferred));
 	}
 
 	void ARClient::subscribeToServerStream()
@@ -144,16 +171,18 @@ namespace audioreflector
 		  const boost::system::error_code& /*error*/,
 		  std::size_t /*bytes_transferred*/)
 	{
-		this->beginRecv();
+
 	}
 
 	void ARClient::beginRecv()
 	{
-		_socket.async_receive_from(
-			boost::asio::buffer(_packetBuffer.get(), MTU), _rcvEp,
-			boost::bind(&ARClient::handleReceive, this,
-			  boost::asio::placeholders::error,
-			  boost::asio::placeholders::bytes_transferred));
+		if (! _doStop) {
+			_socket.async_receive_from(
+				boost::asio::buffer(_packetBuffer.get(), MTU), _rcvEp,
+				boost::bind(&ARClient::handleReceive, this,
+				  boost::asio::placeholders::error,
+				  boost::asio::placeholders::bytes_transferred));
+		}
 	}
 
 	void ARClient::handleReceive(const boost::system::error_code& error,
