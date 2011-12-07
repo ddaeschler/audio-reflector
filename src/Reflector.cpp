@@ -102,12 +102,14 @@ void BeginClientMode()
 	{
 		ARClient* client = new ARClient(reflectorHost, subscPort, sampleRate);
 		client->start();
+
+		string input;
+		cin >> input;
+
+		client->stop();
 	}
 	catch (const std::runtime_error& e)
 	{
 		cout << "Error: " << e.what() << endl;
 	}
-
-	string input;
-	cin >> input;
 }

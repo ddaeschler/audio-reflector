@@ -43,12 +43,14 @@ namespace audioreflector
 		boost::mutex _bufferLock;
 
 		bool _pausedForBufferRefill;
+		bool _doStop;
 
 	public:
 		ARClient(const std::string& host, ushort port, int sampleRate);
 		virtual ~ARClient();
 
 		void start();
+		void stop();
 
 	private:
 		static int PaCallback(const void *inputBuffer, void *outputBuffer,
@@ -63,6 +65,7 @@ namespace audioreflector
 				PaStreamCallbackFlags statusFlags);
 
 		void subscribeToServerStream();
+		void unsubscribeToServerStream();
 		void handleSend(const boost::system::error_code& error, std::size_t bytes_transferred);
 		void beginRecv();
 		void handleReceive(const boost::system::error_code& error, std::size_t bytes_transferred);
