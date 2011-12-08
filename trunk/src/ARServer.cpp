@@ -175,7 +175,7 @@ namespace audioreflector
 									0,          /* no output */
 									paInt16,  /* 16 bit audio */
 									_bitRate,
-									_bitRate / 2,        /* frames per buffer, i.e. the number
+									paFramesPerBufferUnspecified,        /* frames per buffer, i.e. the number
 													   of sample frames that PortAudio will
 													   request from the callback. Many apps
 													   may want to use
