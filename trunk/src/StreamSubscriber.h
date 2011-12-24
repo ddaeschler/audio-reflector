@@ -13,6 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <vector>
 
@@ -22,8 +23,11 @@ namespace audioreflector
 	class StreamSubscriber
 	{
 	private:
+		static const int SUBSCRIPTION_TIMEOUT;
+
 		boost::asio::ip::udp::endpoint _ep;
 		boost::asio::ip::udp::socket& _socket;
+		boost::posix_time::ptime _lastResubscribe;
 
 	public:
 		StreamSubscriber(boost::asio::ip::udp::endpoint endPoint,
@@ -31,7 +35,26 @@ namespace audioreflector
 
 		virtual ~StreamSubscriber();
 
+		/**
+		 * Sends data to this subscriber
+		 */
 		void sendData(packet_buffer_ptr buffer, int amtToCopy);
+
+		/**
+		 * Whether or not this client has updated it's subscription
+		 * within the timeout period
+		 */
+		bool isExpired();
+
+		/**
+		 * Updates the subscription time for this client
+		 */
+		void updateSubscription();
+
+		/**
+		 * Returns the udp endpoint of this subscriber
+		 */
+		const boost::asio::ip::udp::endpoint& getEndpoint() const;
 
 	private:
 		void handleSend(const boost::system::error_code& /*error*/,

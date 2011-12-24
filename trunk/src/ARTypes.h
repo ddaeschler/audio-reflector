@@ -11,6 +11,7 @@
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
+#include <boost/noncopyable.hpp>
 
 #include <iostream>
 
@@ -19,6 +20,8 @@ namespace audioreflector
 	typedef unsigned short ushort;
 
 	const int MTU = 1200;
+	const int BIT_DEPTH = 16;
+	const int BIT_DEPTH_IN_BYTES = 2;
 
 	enum ClientSubscriptionStatus
 	{
@@ -26,7 +29,7 @@ namespace audioreflector
 		CSS_UNSUBSCRIBED = 2
 	};
 
-	struct packet_buffer
+	struct packet_buffer : public boost::noncopyable
 	{
 		public:
 			static const int BUF_SZ = MTU;

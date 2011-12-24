@@ -12,9 +12,12 @@
 
 namespace audioreflector
 {
+	const int StreamSubscriber::SUBSCRIPTION_TIMEOUT = 30;
+
 	StreamSubscriber::StreamSubscriber(boost::asio::ip::udp::endpoint endPoint,
 				boost::asio::ip::udp::socket& socket)
-	:	_ep(endPoint), _socket(socket)
+	:	_ep(endPoint), _socket(socket),
+	 	_lastResubscribe(boost::posix_time::second_clock::local_time())
 	{
 
 	}
@@ -22,6 +25,22 @@ namespace audioreflector
 	StreamSubscriber::~StreamSubscriber()
 	{
 
+	}
+
+	void StreamSubscriber::updateSubscription()
+	{
+		_lastResubscribe = boost::posix_time::second_clock::local_time();
+	}
+
+	const boost::asio::ip::udp::endpoint& StreamSubscriber::getEndpoint() const
+	{
+		return	_ep;
+	}
+
+	bool StreamSubscriber::isExpired()
+	{
+		boost::posix_time::time_duration diff = boost::posix_time::second_clock::local_time() - _lastResubscribe;
+		return diff.seconds() >= SUBSCRIPTION_TIMEOUT;
 	}
 
 	void StreamSubscriber::sendData(packet_buffer_ptr buffer, int amtToCopy)

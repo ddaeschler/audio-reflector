@@ -23,7 +23,7 @@ namespace audioreflector
 		: _host(host), _port(port), _sampleRate(sampleRate),
 		  _ioService(), _socket(_ioService),
 		  _packetBuffer(new char[MTU]),
-		  _netBuffer(sampleRate * 2 * 2)
+		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES) //1 second network buffer
 	{
 
 	}
@@ -110,7 +110,7 @@ namespace audioreflector
 					const PaStreamCallbackTimeInfo* timeInfo,
 					PaStreamCallbackFlags statusFlags)
 	{
-		int bytesPerBuffer = framesPerBuffer * 2;
+		int bytesPerBuffer = framesPerBuffer * BIT_DEPTH_IN_BYTES;
 
 		boost::mutex::scoped_lock lock(_bufferLock);
 		if (_pausedForBufferRefill) {
