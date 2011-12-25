@@ -12,18 +12,19 @@
 #include "EncodedSamples.h"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 
 namespace audioreflector
 {
+	typedef boost::function<void (EncodedSamplesPtr)> FramesReadyCallback;
 
 	class IEncoder
 	{
 	public:
 		virtual ~IEncoder();
 
-
-		virtual EncodedSamplesPtr encode(packet_buffer_ptr buffer, int numSamples, int sampleRate,
-				short bitDepth) = 0;
+		virtual void setFramesReadyCallback(FramesReadyCallback callBack) = 0;
+		virtual void encode(packet_buffer_ptr buffer, int numSamples) = 0;
 	};
 
 	typedef boost::shared_ptr<IEncoder> IEncoderPtr;

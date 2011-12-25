@@ -9,56 +9,69 @@
 #define ENCODERSTAGE_H_
 
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <queue>
 
 #include "ARTypes.h"
-#include "IEncoder.h"
 #include "EncodedSamples.h"
+#include "IEncoder.h"
 
 namespace audioreflector
 {
-struct EncoderQueueItem;
+	struct EncoderQueueItem;
 
-typedef boost::function<void (EncodedSamplesPtr)> EncodeCompleteCallback;
-
-/**
- * A work item for the encode stage
- */
-struct EncoderQueueItem
-{
-public:
-	packet_buffer_ptr Buffer;
-	int NumSamples;
-	int SampleRate;
-	short BitDepth;
-	EncodeCompleteCallback CallBack;
-};
-
-/**
- * The stage that takes the raw PCM and encodes it with the given module
- */
-class EncoderStage
-{
-private:
-	std::queue<EncoderQueueItem> _waitingSamples;
-	IEncoderPtr _encoder;
-
-public:
-	EncoderStage(IEncoderPtr encoder);
-	virtual ~EncoderStage();
+	typedef boost::function<void (EncodedSamplesPtr)> EncodeCompleteCallback;
 
 	/**
-	 * Enqueues a buffer of raw samples to be encoded
+	 * A work item for the encode stage
 	 */
-	void enqueue(packet_buffer_ptr buffer, int numSamples, int sampleRate,
-			short BitDepth, EncodeCompleteCallback callback);
+	struct EncoderQueueItem
+	{
+	public:
+		packet_buffer_ptr Buffer;
+		int NumSamples;
+		int SampleRate;
+
+		EncodeCompleteCallback CallBack;
+	};
 
 	/**
-	 * Encodes the next available sample and runs the callback
+	 * The stage that takes the raw PCM and encodes it with the given module
 	 */
-	void encodeNext();
-};
+	class EncoderStage
+	{
+	private:
+		std::queue<EncoderQueueItem> _waitingSamples;
+		IEncoderPtr _encoder;
+		EncodeCompleteCallback _callBack;
 
+		boost::shared_ptr<boost::thread> _encoderThread;
+
+	public:
+		EncoderStage(IEncoderPtr encoder, EncodeCompleteCallback callBack);
+		virtual ~EncoderStage();
+
+		/**
+		 * Enqueues a buffer of raw samples to be encoded
+		 */
+		void enqueue(packet_buffer_ptr buffer, int numSamples, int sampleRate);
+
+		/**
+		 * Starts the encoder thread
+		 */
+		void start();
+
+
+	private:
+		void run();
+
+		void encodeNext();
+
+		void onEncodedFramesReady(EncodedSamplesPtr samples);
+	};
+
+	typedef boost::shared_ptr<EncoderStage> EncoderStagePtr;
 }
 
 #endif /* ENCODERSTAGE_H_ */
