@@ -11,11 +11,11 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
-#include <queue>
 
 #include "ARTypes.h"
 #include "EncodedSamples.h"
 #include "IEncoder.h"
+#include "ConcurrentQueue.h"
 
 namespace audioreflector
 {
@@ -42,11 +42,12 @@ namespace audioreflector
 	class EncoderStage
 	{
 	private:
-		std::queue<EncoderQueueItem> _waitingSamples;
 		IEncoderPtr _encoder;
 		EncodeCompleteCallback _callBack;
 
 		boost::shared_ptr<boost::thread> _encoderThread;
+
+		concurrent_queue<EncoderQueueItem> _waitingSamples;
 
 	public:
 		EncoderStage(IEncoderPtr encoder, EncodeCompleteCallback callBack);

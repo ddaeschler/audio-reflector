@@ -15,9 +15,11 @@ namespace audioreflector
 	const int StreamSubscriber::SUBSCRIPTION_TIMEOUT = 30;
 
 	StreamSubscriber::StreamSubscriber(boost::asio::ip::udp::endpoint endPoint,
-				boost::asio::ip::udp::socket& socket)
+				boost::asio::ip::udp::socket& socket,
+				boost::function<void()> sendCompleteCallback)
 	:	_ep(endPoint), _socket(socket),
-	 	_lastResubscribe(boost::posix_time::second_clock::local_time())
+	 	_lastResubscribe(boost::posix_time::second_clock::local_time()),
+	 	_sendCompleteCallback(sendCompleteCallback)
 	{
 
 	}
@@ -58,7 +60,7 @@ namespace audioreflector
 		      std::size_t /*bytes_transferred*/,
 		      packet_buffer_ptr buffer)
 	{
-
+		_sendCompleteCallback();
 	}
 }
 

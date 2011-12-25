@@ -26,7 +26,8 @@ namespace audioreflector
 	enum ClientSubscriptionStatus
 	{
 		CSS_SUBSCRIBED = 1,
-		CSS_UNSUBSCRIBED = 2
+		CSS_UNSUBSCRIBED = 2,
+		CSS_UPDATESUBSC = 3
 	};
 
 	struct packet_buffer : public boost::noncopyable
