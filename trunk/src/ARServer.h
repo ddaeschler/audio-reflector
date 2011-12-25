@@ -3,6 +3,7 @@
 #include "ARTypes.h"
 #include "StreamSubscriber.h"
 #include "ObjectPool.h"
+#include "EncoderStage.h"
 
 #include "portaudio.h"
 
@@ -35,11 +36,10 @@ namespace audioreflector
 		SubscriberMap _subscribers;
 		boost::mutex _subscriberLock;
 
-		boost::object_pool<packet_buffer> _bufferPool;
-		boost::mutex _bufferPoolLock;
+		EncoderStagePtr _encoderStage;
 
 	public:
-		ARServer(ushort subscriptionPort, int bitRate);
+		ARServer(ushort subscriptionPort, int bitRate, IEncoderPtr encoder);
 		virtual ~ARServer();
 
 		void start();
@@ -69,7 +69,6 @@ namespace audioreflector
 		void subscribeClient(boost::asio::ip::udp::endpoint ep);
 		void unsubscribeClient(boost::asio::ip::udp::endpoint ep);
 
-		void freePacketBuffer(packet_buffer* buffer);
-		packet_buffer_ptr allocPacketBuffer();
+		void onEncodeComplete(EncodedSamplesPtr samples);
 	};
 }

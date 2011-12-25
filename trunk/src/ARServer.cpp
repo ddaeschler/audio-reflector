@@ -6,6 +6,7 @@
  */
 
 #include "ARServer.h"
+#include "PacketBufferPool.h"
 
 #include <boost/bind.hpp>
 #include <stdexcept>
@@ -18,12 +19,13 @@ using namespace std;
 namespace audioreflector
 {
 
-	ARServer::ARServer(ushort subscriptionPort, int bitRate)
+	ARServer::ARServer(ushort subscriptionPort, int bitRate, IEncoderPtr encoder)
 	:	_subscriptionPort(subscriptionPort), _bitRate(bitRate),
 	 	_ioService(),
-	 	_socket(_ioService, udp::endpoint(udp::v4(), subscriptionPort))
+	 	_socket(_ioService, udp::endpoint(udp::v4(), subscriptionPort)),
+	 	_encoderStage(new EncoderStage(encoder, boost::bind(&ARServer::onEncodeComplete, this, _1)))
 	{
-
+		PacketBufferPool::getInstance();
 	}
 
 	ARServer::~ARServer()
@@ -107,22 +109,6 @@ namespace audioreflector
 		return server->paCallbackMethod(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 	}
 
-	void ARServer::freePacketBuffer(packet_buffer* buffer)
-	{
-		boost::mutex::scoped_lock lock(_bufferPoolLock);
-		_bufferPool.destroy(buffer);
-		//delete buffer;
-	}
-
-	packet_buffer_ptr ARServer::allocPacketBuffer()
-	{
-		boost::mutex::scoped_lock lock(_bufferPoolLock);
-		packet_buffer_ptr buffer(_bufferPool.construct(),
-				boost::bind(&ARServer::freePacketBuffer, this, _1));
-
-		return buffer;
-	}
-
 	int ARServer::paCallbackMethod(const void *inputBuffer, void *outputBuffer,
 	                unsigned long framesPerBuffer,
 	                const PaStreamCallbackTimeInfo* timeInfo,
@@ -132,8 +118,7 @@ namespace audioreflector
 		if (_subscribers.size() > 0) {
 			//broadcast to all clients
 			//packetize the given data using our selected MTU
-			const int SAMPLE_SIZE = 2; //16 bits
-			size_t numBytes = framesPerBuffer * SAMPLE_SIZE;
+			size_t numBytes = framesPerBuffer * BIT_DEPTH_IN_BYTES;
 
 			//calculate the number of buffers we need
 			int reqdBuffers = numBytes / MTU;
@@ -152,13 +137,10 @@ namespace audioreflector
 					amtToCopy = numBytes - copiedSoFar;
 				}
 
-				packet_buffer_ptr buffer(this->allocPacketBuffer());
+				packet_buffer_ptr buffer(PacketBufferPool::getInstance().alloc());
 				memcpy(buffer->contents, inBufferAsCharBuffer + copiedSoFar, amtToCopy);
 
-				SubscriberMap::iterator end = _subscribers.end();
-				for (SubscriberMap::iterator i = _subscribers.begin(); i != end; ++i) {
-					i->second->sendData(buffer, amtToCopy);
-				}
+
 			}
 		}
 
@@ -196,6 +178,11 @@ namespace audioreflector
 		if (Pa_StartStream(_inputStream) != paNoError) {
 			throw std::runtime_error("Could not start audio input");
 		}
+	}
+
+	void ARServer::onEncodeComplete(EncodedSamplesPtr samples)
+	{
+
 	}
 }
 

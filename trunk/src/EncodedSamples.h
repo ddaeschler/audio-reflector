@@ -16,9 +16,7 @@ namespace audioreflector
 	struct EncodedSamples
 	{
 		packet_buffer_ptr Samples;
-		int NumSamples;
 		int SampleRate;
-		int BitDepth;
 		int EncodedSize;
 	};
 

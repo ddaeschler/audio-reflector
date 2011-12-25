@@ -3,6 +3,8 @@
 #include "ARTypes.h"
 #include "ARServer.h"
 #include "ARClient.h"
+#include "IEncoder.h"
+#include "WavPackEncoder.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -63,7 +65,16 @@ void BeginServerMode()
 		sampleRate = boost::lexical_cast<int>(line);
 	}
 
-	ARServer* server = new ARServer(subscPort, sampleRate);
+	cout << "Encoder (n:none, wl:lossless) [wl]: ";
+	IEncoderPtr encoder;
+	getline(cin, line);
+	if (line == "" || line == "wl") {
+		encoder.reset(new WavPackEncoder(sampleRate));
+	} else {
+
+	}
+
+	ARServer* server = new ARServer(subscPort, sampleRate, encoder);
 	server->start();
 
 	string input;
