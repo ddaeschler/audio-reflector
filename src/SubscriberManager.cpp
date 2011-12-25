@@ -101,11 +101,12 @@ namespace audioreflector
 			_waitingSamples.push(samples);
 
 		} else {
-			this->beginBroadcastSamples(samples);
+			_waitingSamples.push(samples);
+			this->beginBroadcastSamples();
 		}
 	}
 
-	void SubscriberManager::beginBroadcastSamples(EncodedSamplesPtr samples)
+	void SubscriberManager::beginBroadcastSamples()
 	{
 		_isSending = true;
 		_currentClient = _subscribers.begin();
@@ -116,11 +117,21 @@ namespace audioreflector
 	void SubscriberManager::sendSampleToClient()
 	{
 		if (_currentClient != _subscribers.end()) {
+			EncodedSamplesPtr samples = _waitingSamples.front();
+			_currentClient->second->sendData(samples->Samples, samples->EncodedSize);
 
 		} else {
-			_isSending = false;
 			this->performPendingUnsubscribes();
 			this->performPendingSubscribes();
+			_waitingSamples.pop();
+
+			if (_waitingSamples.size() == 0) {
+				_isSending = false;
+
+			} else {
+				//continue sending while the queue is full
+				this->beginBroadcastSamples();
+			}
 		}
 	}
 

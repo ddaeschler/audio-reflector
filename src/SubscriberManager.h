@@ -55,7 +55,7 @@ namespace audioreflector
 		void recordSubscription(const boost::asio::ip::udp::endpoint& ep);
 
 		void serializedEnqueueOrSend(EncodedSamplesPtr samples);
-		void beginBroadcastSamples(EncodedSamplesPtr samples);
+		void beginBroadcastSamples();
 		void onAfterSampleSentToClient();
 		void sendSampleToClient();
 
