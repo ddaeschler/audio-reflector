@@ -14,6 +14,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ip/udp.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/function.hpp>
 
 #include <vector>
 
@@ -29,9 +30,12 @@ namespace audioreflector
 		boost::asio::ip::udp::socket& _socket;
 		boost::posix_time::ptime _lastResubscribe;
 
+		boost::function<void()> _sendCompleteCallback;
+
 	public:
 		StreamSubscriber(boost::asio::ip::udp::endpoint endPoint,
-				boost::asio::ip::udp::socket& socket);
+				boost::asio::ip::udp::socket& socket,
+				boost::function<void()> sendCompleteCallback);
 
 		virtual ~StreamSubscriber();
 

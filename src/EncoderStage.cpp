@@ -31,14 +31,24 @@ namespace audioreflector
 		_waitingSamples.push(queueItem);
 	}
 
+	void EncoderStage::start()
+	{
+		_encoderThread.reset(new boost::thread(boost::bind(&EncoderStage::run, this)));
+	}
+
+	void EncoderStage::run()
+	{
+		while (true) {
+			this->encodeNext();
+		}
+	}
+
 	void EncoderStage::encodeNext()
 	{
-		if (_waitingSamples.size() > 0) {
-			EncoderQueueItem topItem = _waitingSamples.front();
-			_waitingSamples.pop();
+		EncoderQueueItem topItem;
+		_waitingSamples.wait_and_pop(topItem);
 
-			_encoder->encode(topItem.Buffer, topItem.NumSamples);
-		}
+		_encoder->encode(topItem.Buffer, topItem.NumSamples);
 	}
 
 	void EncoderStage::onEncodedFramesReady(EncodedSamplesPtr samples)

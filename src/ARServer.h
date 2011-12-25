@@ -4,6 +4,7 @@
 #include "StreamSubscriber.h"
 #include "ObjectPool.h"
 #include "EncoderStage.h"
+#include "SubscriberManager.h"
 
 #include "portaudio.h"
 
@@ -23,7 +24,7 @@ namespace audioreflector
 	{
 	private:
 		ushort _subscriptionPort;
-		int _bitRate;
+		int _sampleRate;
 		boost::asio::io_service _ioService;
 		boost::asio::ip::udp::socket _socket;
 		boost::asio::ip::udp::endpoint _remoteEndpoint;
@@ -32,14 +33,11 @@ namespace audioreflector
 
 		boost::shared_ptr<boost::thread> _networkThread;
 
-		typedef std::map<boost::asio::ip::udp::endpoint, StreamSubscriberPtr> SubscriberMap;
-		SubscriberMap _subscribers;
-		boost::mutex _subscriberLock;
-
 		EncoderStagePtr _encoderStage;
+		SubscriberManagerPtr _subscriberMgr;
 
 	public:
-		ARServer(ushort subscriptionPort, int bitRate, IEncoderPtr encoder);
+		ARServer(ushort subscriptionPort, int sampleRate, IEncoderPtr encoder);
 		virtual ~ARServer();
 
 		void start();
@@ -68,6 +66,7 @@ namespace audioreflector
 
 		void subscribeClient(boost::asio::ip::udp::endpoint ep);
 		void unsubscribeClient(boost::asio::ip::udp::endpoint ep);
+		void updateClientSubscription(boost::asio::ip::udp::endpoint ep);
 
 		void onEncodeComplete(EncodedSamplesPtr samples);
 	};

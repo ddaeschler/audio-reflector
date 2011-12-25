@@ -19,11 +19,12 @@ using namespace std;
 namespace audioreflector
 {
 
-	ARServer::ARServer(ushort subscriptionPort, int bitRate, IEncoderPtr encoder)
-	:	_subscriptionPort(subscriptionPort), _bitRate(bitRate),
+	ARServer::ARServer(ushort subscriptionPort, int sampleRate, IEncoderPtr encoder)
+	:	_subscriptionPort(subscriptionPort), _sampleRate(sampleRate),
 	 	_ioService(),
 	 	_socket(_ioService, udp::endpoint(udp::v4(), subscriptionPort)),
-	 	_encoderStage(new EncoderStage(encoder, boost::bind(&ARServer::onEncodeComplete, this, _1)))
+	 	_encoderStage(new EncoderStage(encoder, boost::bind(&ARServer::onEncodeComplete, this, _1))),
+	 	_subscriberMgr(new SubscriberManager(_ioService, _socket))
 	{
 		PacketBufferPool::getInstance();
 	}
@@ -77,26 +78,29 @@ namespace audioreflector
 		if (! error) {
 			if (CSS_SUBSCRIBED == (ClientSubscriptionStatus) buffer->contents[0]) {
 				this->subscribeClient(epCopy);
-			} else {
+			} else if (CSS_UNSUBSCRIBED == (ClientSubscriptionStatus) buffer->contents[0]) {
 				this->unsubscribeClient(epCopy);
+			} else if (CSS_UPDATESUBSC == (ClientSubscriptionStatus) buffer->contents[0]) {
+				this->updateClientSubscription(epCopy);
 			}
 		}
 	}
 
+	void ARServer::updateClientSubscription(boost::asio::ip::udp::endpoint ep)
+	{
+		_subscriberMgr->updateSubscription(ep);
+	}
+
 	void ARServer::subscribeClient(boost::asio::ip::udp::endpoint ep)
 	{
-		boost::mutex::scoped_lock lock(_subscriberLock);
-
 		cout << "New client connection: " << ep << endl;
-		_subscribers[ep] = StreamSubscriberPtr(new StreamSubscriber(ep, _socket));
+		_subscriberMgr->newSubscriber(ep);
 	}
 
 	void ARServer::unsubscribeClient(boost::asio::ip::udp::endpoint ep)
 	{
-		boost::mutex::scoped_lock lock(_subscriberLock);
-
 		cout << "End client connection: " << ep << endl;
-		_subscribers.erase(ep);
+		_subscriberMgr->unsubscribe(ep);
 	}
 
 	int ARServer::PaCallback(const void *inputBuffer, void *outputBuffer,
@@ -114,34 +118,31 @@ namespace audioreflector
 	                const PaStreamCallbackTimeInfo* timeInfo,
 	                PaStreamCallbackFlags statusFlags)
 	{
-		boost::mutex::scoped_lock lock(_subscriberLock);
-		if (_subscribers.size() > 0) {
-			//broadcast to all clients
-			//packetize the given data using our selected MTU
-			size_t numBytes = framesPerBuffer * BIT_DEPTH_IN_BYTES;
+		//broadcast to all clients
+		//packetize the given data using our selected MTU
+		size_t numBytes = framesPerBuffer * BIT_DEPTH_IN_BYTES;
 
-			//calculate the number of buffers we need
-			int reqdBuffers = numBytes / MTU;
-			if (numBytes % MTU > 0) {
-				reqdBuffers++;
+		//calculate the number of buffers we need
+		int reqdBuffers = numBytes / MTU;
+		if (numBytes % MTU > 0) {
+			reqdBuffers++;
+		}
+
+		char* inBufferAsCharBuffer = (char*)inputBuffer;
+
+		for (int i = 0; i < reqdBuffers; ++i) {
+			size_t copiedSoFar = i * MTU;
+			size_t amtToCopy;
+			if (MTU < numBytes - copiedSoFar) {
+				amtToCopy = MTU;
+			} else {
+				amtToCopy = numBytes - copiedSoFar;
 			}
 
-			char* inBufferAsCharBuffer = (char*)inputBuffer;
+			packet_buffer_ptr buffer(PacketBufferPool::getInstance().alloc());
+			memcpy(buffer->contents, inBufferAsCharBuffer + copiedSoFar, amtToCopy);
 
-			for (int i = 0; i < reqdBuffers; ++i) {
-				size_t copiedSoFar = i * MTU;
-				size_t amtToCopy;
-				if (MTU < numBytes - copiedSoFar) {
-					amtToCopy = MTU;
-				} else {
-					amtToCopy = numBytes - copiedSoFar;
-				}
-
-				packet_buffer_ptr buffer(PacketBufferPool::getInstance().alloc());
-				memcpy(buffer->contents, inBufferAsCharBuffer + copiedSoFar, amtToCopy);
-
-
-			}
+			_encoderStage->enqueue(buffer, framesPerBuffer, _sampleRate);
 		}
 
 		return paContinue;
@@ -156,7 +157,7 @@ namespace audioreflector
 									1,          /* 1 input channel*/
 									0,          /* no output */
 									paInt16,  /* 16 bit audio */
-									_bitRate,
+									_sampleRate,
 									paFramesPerBufferUnspecified,        /* frames per buffer, i.e. the number
 													   of sample frames that PortAudio will
 													   request from the callback. Many apps
@@ -182,7 +183,7 @@ namespace audioreflector
 
 	void ARServer::onEncodeComplete(EncodedSamplesPtr samples)
 	{
-
+		_subscriberMgr->enqueueOrSend(samples);
 	}
 }
 
