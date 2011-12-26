@@ -5,6 +5,8 @@
 #include "ARClient.h"
 #include "IEncoder.h"
 #include "WavPackEncoder.h"
+#include "IDecoder.h"
+#include "WavPackDecoder.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -109,9 +111,20 @@ void BeginClientMode()
 		sampleRate = boost::lexical_cast<int>(line);
 	}
 
+
+	cout << "Encoding (n:none, wl:lossless) [wl]: ";
+	IDecoderPtr decoder;
+	getline(cin, line);
+	if (line == "" || line == "wl") {
+		decoder.reset(new WavPackDecoder());
+	} else {
+
+	}
+
 	try
 	{
-		ARClient* client = new ARClient(reflectorHost, subscPort, sampleRate);
+		ARClient* client = new ARClient(reflectorHost, subscPort, sampleRate,
+				decoder);
 		client->start();
 
 		string input;

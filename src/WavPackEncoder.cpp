@@ -9,7 +9,10 @@
 
 #include "PacketBufferPool.h"
 
+#include <boost/lexical_cast.hpp>
 #include <stdexcept>
+#include <iostream>
+
 
 namespace audioreflector
 {
@@ -24,11 +27,15 @@ namespace audioreflector
 		}
 
 	    _config = new WavpackConfig;
+	    memset(_config, 0, sizeof(WavpackConfig));
 	    _config->bytes_per_sample = BIT_DEPTH_IN_BYTES;
 	    _config->bits_per_sample = BIT_DEPTH;
 	    _config->sample_rate = sampleRate;
 	    _config->channel_mask = 4;
 	    _config->num_channels = 1;
+	    //important: we have to set the maximum samples to account for MTU so we don't
+	    //have to do manual splitting and include a more complex protocol implementation
+	    _config->block_samples = MTU / BIT_DEPTH_IN_BYTES;
 
 	    WavpackSetConfiguration(_wpContext, _config, -1);
 	    WavpackPackInit(_wpContext);
@@ -64,12 +71,16 @@ namespace audioreflector
 		}
 
 		if (WavpackPackSamples(_wpContext, _tmpBuffer, numSamples) == false) {
-			throw std::runtime_error("Unable to compress the given samples");
+			throw std::runtime_error("Unable to compress the given " +
+					boost::lexical_cast<std::string>(numSamples) + " samples: " +
+					WavpackGetErrorMessage(_wpContext));
 		}
 	}
 
 	int WavPackEncoder::RawOutput(void *id, void *data, int32_t bcount)
 	{
+		if (id == 0) return (int) true;
+
 		WavPackEncoder* encoder = (WavPackEncoder*)id;
 		return encoder->onOutputAvailable(data, bcount);
 	}
@@ -84,7 +95,10 @@ namespace audioreflector
 		EncodedSamplesPtr samples(new EncodedSamples);
 		samples->SampleRate = _sampleRate;
 		samples->EncodedSize = sz;
+		samples->Samples = buffer;
 
 		_framesReady(samples);
+
+		return (int) true;
 	}
 }

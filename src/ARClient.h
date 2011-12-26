@@ -9,6 +9,7 @@
 #define ARCLIENT_H_
 
 #include "ARTypes.h"
+#include "IDecoder.h"
 #include "portaudio.h"
 
 #include <boost/asio.hpp>
@@ -28,6 +29,7 @@ namespace audioreflector
 		std::string _host;
 		ushort _port;
 		int _sampleRate;
+		IDecoderPtr _decoder;
 
 		boost::asio::io_service _ioService;
 		boost::asio::ip::udp::socket _socket;
@@ -46,7 +48,8 @@ namespace audioreflector
 		bool _doStop;
 
 	public:
-		ARClient(const std::string& host, ushort port, int sampleRate);
+		ARClient(const std::string& host, ushort port, int sampleRate,
+				IDecoderPtr decoder);
 		virtual ~ARClient();
 
 		void start();
