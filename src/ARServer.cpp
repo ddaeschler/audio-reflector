@@ -174,6 +174,10 @@ namespace audioreflector
 
 		if( err != paNoError ) throw std::runtime_error("Could not initialize audio input");
 
+		const PaStreamInfo* streamInfo = Pa_GetStreamInfo( _inputStream );
+
+		cout << "Measured Sample Rate: " << streamInfo->sampleRate << endl;
+
 		this->beginRecording();
 	}
 
