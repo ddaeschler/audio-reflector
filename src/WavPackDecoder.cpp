@@ -7,6 +7,8 @@
 
 #include "WavPackDecoder.h"
 
+#include <cstring>
+
 namespace audioreflector
 {
 	const int WavPackDecoder::DECODE_BUFFER_SZ = 2048;
