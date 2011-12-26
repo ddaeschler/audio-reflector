@@ -36,11 +36,14 @@ namespace audioreflector
 
 	void ARServer::start()
 	{
-		//we need to fire up portaudio
-		this->initPortaudio();
-
 		//we then need to fire up asio to throw udp at the subscriber
 		this->initAsio();
+
+		//the encoder stage
+		_encoderStage->start();
+
+		//and finally, fire up portaudio to feed the encoder
+		this->initPortaudio();
 	}
 
 	void ARServer::initAsio()

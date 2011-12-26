@@ -19,11 +19,13 @@ namespace audioreflector
 	const char* ARClient::SubscribeMsg = "\1";
 	const char* ARClient::UnsubscribeMsg = "\2";
 
-	ARClient::ARClient(const std::string& host, ushort port, int sampleRate)
+	ARClient::ARClient(const std::string& host, ushort port, int sampleRate,
+			IDecoderPtr decoder)
 		: _host(host), _port(port), _sampleRate(sampleRate),
 		  _ioService(), _socket(_ioService),
 		  _packetBuffer(new char[MTU]),
-		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES) //1 second network buffer
+		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES), //1 second network buffer
+		  _decoder(decoder)
 	{
 
 	}
@@ -189,11 +191,13 @@ namespace audioreflector
 			      std::size_t bytes_transferred)
 	{
 		{
-			boost::mutex::scoped_lock lock(_bufferLock);
+			//copy received data to the circular buffer after decoding
+			decoded_samples samples = _decoder->decode(_packetBuffer.get(), bytes_transferred);
 
-			//copy received data to the circular buffer
-			_netBuffer.insert(_netBuffer.end(), _packetBuffer.get(), _packetBuffer.get() + bytes_transferred);
-			if (_pausedForBufferRefill && std::distance(_netBuffer.begin(), _netBuffer.end()) >= _sampleRate * 2 * 1.75) {
+			boost::mutex::scoped_lock lock(_bufferLock);
+			_netBuffer.insert(_netBuffer.end(), samples.SampleData, samples.SampleData + (samples.NumSamples * BIT_DEPTH_IN_BYTES) );
+			cout << "got: " << samples.NumSamples << endl;
+			if (_pausedForBufferRefill && std::distance(_netBuffer.begin(), _netBuffer.end()) >= _sampleRate * BIT_DEPTH_IN_BYTES * 0.75) {
 				_pausedForBufferRefill = false;
 
 				cout << "Buffer refilled" << endl;
