@@ -196,7 +196,7 @@ namespace audioreflector
 
 			boost::mutex::scoped_lock lock(_bufferLock);
 			_netBuffer.insert(_netBuffer.end(), samples.SampleData, samples.SampleData + (samples.NumSamples * BIT_DEPTH_IN_BYTES) );
-			cout << "got: " << samples.NumSamples << endl;
+
 			if (_pausedForBufferRefill && std::distance(_netBuffer.begin(), _netBuffer.end()) >= _sampleRate * BIT_DEPTH_IN_BYTES * 0.75) {
 				_pausedForBufferRefill = false;
 
