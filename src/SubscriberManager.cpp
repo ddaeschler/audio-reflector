@@ -87,7 +87,7 @@ namespace audioreflector
 		SubscriberMap::iterator end = _subscribers.end();
 		for (SubscriberMap::iterator i = _subscribers.begin(); i != end; ++i) {
 			if (i->second->isExpired()) {
-				std::cerr << "Subscription timeout expired" << i->first << std::endl;
+				std::cerr << "Subscription timeout expired: " << i->first << std::endl;
 				this->unsubscribe(i->first);
 			}
 		}
