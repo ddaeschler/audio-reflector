@@ -22,8 +22,11 @@ namespace audioreflector
 	class SubscriberManager : public boost::noncopyable
 	{
 	private:
+		const static int SUBSCRIPTION_CHECK_INTERVAL;
+
 		boost::asio::io_service& _ioService;
 		boost::asio::ip::udp::socket& _serverSocket;
+		boost::asio::deadline_timer _subscriptionCheckTimer;
 
 		typedef std::map<boost::asio::ip::udp::endpoint, StreamSubscriberPtr> SubscriberMap;
 		SubscriberMap _subscribers;
@@ -65,6 +68,9 @@ namespace audioreflector
 
 		void performPendingSubscribes();
 		void performPendingUnsubscribes();
+
+		void onCheckForExpirations(const boost::system::error_code& error);
+		void resetSubscriptionCheckTimer();
 	};
 
 	typedef boost::shared_ptr<SubscriberManager> SubscriberManagerPtr;

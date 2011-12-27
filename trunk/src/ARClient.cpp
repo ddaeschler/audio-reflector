@@ -8,24 +8,32 @@
 #include "ARClient.h"
 
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <stdexcept>
 #include <iostream>
 
 using boost::asio::ip::udp;
 using namespace std;
 
+using namespace boost::posix_time;
+
 namespace audioreflector
 {
 	const char* ARClient::SubscribeMsg = "\1";
 	const char* ARClient::UnsubscribeMsg = "\2";
+	const char* ARClient::RenewMsg = "\3";
+
+	const int ARClient::SUBSCRIPTION_RENEWAL_INTERVAL = 10;
 
 	ARClient::ARClient(const std::string& host, ushort port, int sampleRate,
 			IDecoderPtr decoder)
 		: _host(host), _port(port), _sampleRate(sampleRate),
+		  _decoder(decoder),
 		  _ioService(), _socket(_ioService),
+		  _subscriptionRenewalTimer(_ioService),
 		  _packetBuffer(new char[MTU]),
-		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES), //1 second network buffer
-		  _decoder(decoder)
+		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES) //1 second network buffer
+
 	{
 
 	}
@@ -38,6 +46,7 @@ namespace audioreflector
 	void ARClient::stop()
 	{
 		this->unsubscribeToServerStream();
+		_subscriptionRenewalTimer.cancel();
 		_doStop = true;
 
 		//make sure the unsubscribe message is sent
@@ -145,10 +154,30 @@ namespace audioreflector
 
 		//send the subscribe message and begin receive
 		this->subscribeToServerStream();
+		this->resetSubscriptionRenewalTimer();
 		this->beginRecv();
 
 		_ioService.run();
-		cout << "asio died" << endl;
+	}
+
+	void ARClient::resetSubscriptionRenewalTimer()
+	{
+		_subscriptionRenewalTimer.expires_from_now(seconds(SUBSCRIPTION_RENEWAL_INTERVAL));
+		_subscriptionRenewalTimer.async_wait(boost::bind(&ARClient::onRenewSubscription, this,
+				boost::asio::placeholders::error));
+	}
+
+	void ARClient::onRenewSubscription(const boost::system::error_code& error)
+	{
+		if (! error) {
+			_socket.async_send_to(
+				boost::asio::buffer(ARClient::RenewMsg, 1), _remoteEndpoint,
+				boost::bind(&ARClient::handleSend, this,
+							boost::asio::placeholders::error,
+							boost::asio::placeholders::bytes_transferred));
+
+			this->resetSubscriptionRenewalTimer();
+		}
 	}
 
 	void ARClient::unsubscribeToServerStream()
