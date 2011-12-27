@@ -25,6 +25,8 @@ namespace audioreflector
 	private:
 		static const char* SubscribeMsg;
 		static const char* UnsubscribeMsg;
+		static const char* RenewMsg;
+		static const int SUBSCRIPTION_RENEWAL_INTERVAL;
 
 		std::string _host;
 		ushort _port;
@@ -36,6 +38,8 @@ namespace audioreflector
 		boost::asio::ip::udp::endpoint _remoteEndpoint;
 		boost::asio::ip::udp::endpoint _rcvEp;
 
+		boost::asio::deadline_timer _subscriptionRenewalTimer;
+
 		PaStream* _outputStream;
 
 		boost::shared_ptr<boost::thread> _networkThread;
@@ -43,6 +47,8 @@ namespace audioreflector
 
 		boost::circular_buffer<char> _netBuffer;
 		boost::mutex _bufferLock;
+
+
 
 		bool _pausedForBufferRefill;
 		bool _doStop;
@@ -75,7 +81,8 @@ namespace audioreflector
 
 		void initPortaudio();
 		void asioThreadRun();
-
+		void resetSubscriptionRenewalTimer();
+		void onRenewSubscription(const boost::system::error_code& error);
 	};
 }
 

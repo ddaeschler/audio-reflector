@@ -9,17 +9,24 @@
 
 #include <boost/foreach.hpp>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <vector>
 
+using namespace boost::posix_time;
 
 namespace audioreflector
 {
+	const int SubscriberManager::SUBSCRIPTION_CHECK_INTERVAL = 10;
+
 	SubscriberManager::SubscriberManager(boost::asio::io_service& ioService,
 			boost::asio::ip::udp::socket& serverSocket)
-	: _ioService(ioService), _serverSocket(serverSocket), _isSending(false)
+	: _ioService(ioService), _serverSocket(serverSocket),
+	  _subscriptionCheckTimer(_ioService),
+	  _isSending(false)
 	{
-
+		//set a timer to remove subscribers that have not checked in during the timeout period
+		this->resetSubscriptionCheckTimer();
 	}
 
 	SubscriberManager::~SubscriberManager()
@@ -76,18 +83,14 @@ namespace audioreflector
 
 	void SubscriberManager::checkForTimedOutSubscriptions()
 	{
-		std::vector<boost::asio::ip::udp::endpoint> deadEps;
-
 		SubscriberMap::iterator end = _subscribers.end();
 		for (SubscriberMap::iterator i = _subscribers.begin(); i != end; ++i) {
 			if (i->second->isExpired()) {
-				deadEps.push_back(i->first);
+				this->unsubscribe(i->first);
 			}
 		}
 
-		BOOST_FOREACH(const boost::asio::ip::udp::endpoint& ep, deadEps) {
-			_subscribers.erase(ep);
-		}
+
 	}
 
 	void SubscriberManager::enqueueOrSend(EncodedSamplesPtr samples)
@@ -161,6 +164,21 @@ namespace audioreflector
 	{
 		++_currentClient;
 		this->sendSampleToClient();
+	}
+
+	void SubscriberManager::resetSubscriptionCheckTimer()
+	{
+		_subscriptionCheckTimer.expires_from_now(seconds(SUBSCRIPTION_CHECK_INTERVAL));
+		_subscriptionCheckTimer.async_wait(boost::bind(&SubscriberManager::onCheckForExpirations, this,
+				boost::asio::placeholders::error));
+	}
+
+	void SubscriberManager::onCheckForExpirations(const boost::system::error_code& error)
+	{
+		if (! error) {
+			this->checkForTimedOutSubscriptions();
+			this->resetSubscriptionCheckTimer();
+		}
 	}
 
 }
