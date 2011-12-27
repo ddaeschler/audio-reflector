@@ -12,6 +12,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <vector>
+#include <iostream>
 
 using namespace boost::posix_time;
 
@@ -86,6 +87,7 @@ namespace audioreflector
 		SubscriberMap::iterator end = _subscribers.end();
 		for (SubscriberMap::iterator i = _subscribers.begin(); i != end; ++i) {
 			if (i->second->isExpired()) {
+				std::cerr << "Subscription timeout expired" << i->first << std::endl;
 				this->unsubscribe(i->first);
 			}
 		}
