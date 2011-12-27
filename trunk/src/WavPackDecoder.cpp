@@ -28,12 +28,12 @@ namespace audioreflector
 
 	int wpd_set_pos_abs_shim(void *id, uint32_t pos)
 	{
-
+		return 0;
 	}
 
 	int wpd_set_pos_rel_shim(void *id, int32_t delta, int mode)
 	{
-
+		return 0;
 	}
 
 	int wpd_push_back_byte_shim(void *id, int c)
@@ -55,7 +55,7 @@ namespace audioreflector
 
 	int32_t wpd_write_bytes_shim(void *id, void *data, int32_t bcount)
 	{
-
+		return 0;
 	}
 
 	WavPackDecoder::WavPackDecoder()
@@ -91,7 +91,10 @@ namespace audioreflector
 		if (! _context) {
 			_context = WavpackOpenFileInputEx(&_streamReader, this, 0, _errMsgStorage.get(), OPEN_STREAMING, 0);
 			if (! _context) {
-				throw std::runtime_error(std::string("Could not set up input stream: ") + _errMsgStorage.get());
+				std::string errmsg("Could not set up input stream: ");
+				errmsg += std::string(_errMsgStorage.get());
+
+				throw std::runtime_error(errmsg);
 			}
 		}
 
