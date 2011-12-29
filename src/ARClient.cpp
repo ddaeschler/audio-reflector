@@ -8,7 +8,6 @@
 #include "ARClient.h"
 
 #include <boost/bind.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -27,13 +26,12 @@ namespace audioreflector
 
 	ARClient::ARClient(const std::string& host, ushort port, int sampleRate,
 			IDecoderPtr decoder)
-		: _host(host), _port(port), _sampleRate(sampleRate),
-		  _decoder(decoder),
-		  _ioService(), _socket(_ioService),
-		  _subscriptionRenewalTimer(_ioService),
-		  _packetBuffer(new char[MTU]),
-		  _netBuffer(sampleRate * BIT_DEPTH_IN_BYTES) //1 second network buffer
-
+	: 	_host(host), _port(port), _sampleRate(sampleRate),
+		_decoder(decoder), _ioService(), _socket(_ioService),
+		_subscriptionRenewalTimer(_ioService),
+		_packetBuffer(new char[MTU]),
+		_netBuffer(sampleRate * BIT_DEPTH_IN_BYTES), //1 second network buffer
+		_lastBufferDisplay(boost::posix_time::second_clock::local_time())
 	{
 
 	}
@@ -231,10 +229,19 @@ namespace audioreflector
 
 				cout << "Buffer refilled" << endl;
 			}
+
+			ptime timeNow = boost::posix_time::second_clock::local_time();
+			if (timeNow - _lastBufferDisplay > boost::posix_time::seconds(5) &&
+					_netBuffer.size() > 0) {
+
+				int dist = (int)std::distance(_netBuffer.begin(), _netBuffer.end());
+				float level = (dist / (float)_netBuffer.capacity()) * 100;
+
+				cout << "Buffer Level: " << (int)level << "%" << endl;
+				_lastBufferDisplay = timeNow;
+			}
 		}
 
 		this->beginRecv();
-
-
 	}
 }
