@@ -17,6 +17,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/circular_buffer.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace audioreflector
 {
@@ -48,10 +49,10 @@ namespace audioreflector
 		boost::circular_buffer<char> _netBuffer;
 		boost::mutex _bufferLock;
 
-
-
 		bool _pausedForBufferRefill;
 		bool _doStop;
+
+		boost::posix_time::ptime _lastBufferDisplay;
 
 	public:
 		ARClient(const std::string& host, ushort port, int sampleRate,
