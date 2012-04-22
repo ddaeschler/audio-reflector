@@ -30,7 +30,7 @@ namespace audioreflector
 		static const int SUBSCRIPTION_RENEWAL_INTERVAL;
 
 		std::string _host;
-		ushort _port;
+		ar_ushort _port;
 		int _sampleRate;
 		IDecoderPtr _decoder;
 
@@ -55,7 +55,7 @@ namespace audioreflector
 		boost::posix_time::ptime _lastBufferDisplay;
 
 	public:
-		ARClient(const std::string& host, ushort port, int sampleRate,
+		ARClient(const std::string& host, ar_ushort port, int sampleRate,
 				IDecoderPtr decoder);
 		virtual ~ARClient();
 

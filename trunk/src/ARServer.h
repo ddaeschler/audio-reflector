@@ -23,7 +23,7 @@ namespace audioreflector
 	class ARServer
 	{
 	private:
-		ushort _subscriptionPort;
+		ar_ushort _subscriptionPort;
 		int _sampleRate;
 		boost::asio::io_service _ioService;
 		boost::asio::ip::udp::socket _socket;
@@ -37,7 +37,7 @@ namespace audioreflector
 		SubscriberManagerPtr _subscriberMgr;
 
 	public:
-		ARServer(ushort subscriptionPort, int sampleRate, IEncoderPtr encoder);
+		ARServer(ar_ushort subscriptionPort, int sampleRate, IEncoderPtr encoder);
 		virtual ~ARServer();
 
 		void start();

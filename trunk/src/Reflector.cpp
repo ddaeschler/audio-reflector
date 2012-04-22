@@ -50,12 +50,12 @@ void BeginServerMode()
 	string line;
 
 	cout << "UDP Subscription Port [8889]: ";
-	ushort subscPort;
+	ar_ushort subscPort;
 	getline(cin, line);
 	if (line == "") {
 		subscPort = 8889;
 	} else {
-		subscPort = boost::lexical_cast<ushort>(line);
+		subscPort = boost::lexical_cast<ar_ushort>(line);
 	}
 
 	cout << "Sample Rate [44100]: ";

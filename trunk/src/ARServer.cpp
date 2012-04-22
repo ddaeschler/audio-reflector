@@ -19,7 +19,7 @@ using namespace std;
 namespace audioreflector
 {
 
-	ARServer::ARServer(ushort subscriptionPort, int sampleRate, IEncoderPtr encoder)
+	ARServer::ARServer(ar_ushort subscriptionPort, int sampleRate, IEncoderPtr encoder)
 	:	_subscriptionPort(subscriptionPort), _sampleRate(sampleRate),
 	 	_ioService(),
 	 	_socket(_ioService, udp::endpoint(udp::v4(), subscriptionPort)),
