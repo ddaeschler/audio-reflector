@@ -8,6 +8,7 @@
 #include "ARClient.h"
 
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -24,7 +25,7 @@ namespace audioreflector
 
 	const int ARClient::SUBSCRIPTION_RENEWAL_INTERVAL = 10;
 
-	ARClient::ARClient(const std::string& host, ushort port, int sampleRate,
+	ARClient::ARClient(const std::string& host, ar_ushort port, int sampleRate,
 			IDecoderPtr decoder)
 	: 	_host(host), _port(port), _sampleRate(sampleRate),
 		_decoder(decoder), _ioService(), _socket(_ioService),
@@ -97,7 +98,8 @@ namespace audioreflector
 									static_cast<void*>(this) ); /*This is a pointer that will be passed to
 													   	   	   your callback*/
 
-		if( err != paNoError ) throw std::runtime_error("Could not initialize audio output");
+		if( err != paNoError ) throw std::runtime_error("Could not initialize audio output: Pa_OpenDefaultStream returned " +
+				boost::lexical_cast<std::string>(err));
 
 		err = Pa_StartStream( _outputStream );
 
