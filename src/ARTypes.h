@@ -17,7 +17,7 @@
 
 namespace audioreflector
 {
-	typedef unsigned short ushort;
+	typedef unsigned short ar_ushort;
 
 	const int MTU = 1200;
 	const int BIT_DEPTH = 16;
