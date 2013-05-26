@@ -87,7 +87,7 @@ namespace audioreflector
 
 	int WavPackEncoder::onOutputAvailable(void* data, int32_t bcount)
 	{
-		std::cout << bcount << std::endl;
+		//std::cout << bcount << std::endl;
 
 		if (bcount > encoder_buffer::BUF_SZ) {
 			throw std::runtime_error("Wavpack output would overflow the encoder buffer");
