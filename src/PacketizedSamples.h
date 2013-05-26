@@ -26,8 +26,14 @@ namespace audioreflector
 		int SampleRate;
 		size_t Size;
 
+		/**
+		 * When packetizing, this keeps tract of if this is the last packet of a single block.
+		 * This allows us to properly support block based encoders
+		 */
+		bool IsLastPacket;
+
 		PacketizedSamples(size_t start, size_t count, int sampleRate, EncodedSamplesPtr sourceSamples) {
-			assert(count < packet_buffer::BUF_SZ);
+			assert(count <= packet_buffer::BUF_SZ);
 
 			SampleRate = sampleRate;
 			Size = count;

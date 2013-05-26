@@ -35,7 +35,7 @@ namespace audioreflector
 	    _config->channel_mask = 4;
 	    _config->num_channels = 1;
 
-	    _config->block_samples = encoder_buffer::BUF_SZ / BIT_DEPTH_IN_BYTES;
+	    _config->block_samples = WavPackEncoder::SAMPLES_PER_BLOCK;
 
 	    WavpackSetConfiguration(_wpContext, _config, -1);
 	    WavpackPackInit(_wpContext);
@@ -87,6 +87,8 @@ namespace audioreflector
 
 	int WavPackEncoder::onOutputAvailable(void* data, int32_t bcount)
 	{
+		std::cout << bcount << std::endl;
+
 		if (bcount > encoder_buffer::BUF_SZ) {
 			throw std::runtime_error("Wavpack output would overflow the encoder buffer");
 		}
