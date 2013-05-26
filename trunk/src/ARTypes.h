@@ -9,7 +9,6 @@
 #define ARTYPES_H_
 
 #include <boost/shared_array.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/noncopyable.hpp>
 
@@ -29,22 +28,6 @@ namespace audioreflector
 		CSS_UNSUBSCRIBED = 2,
 		CSS_UPDATESUBSC = 3
 	};
-
-	struct packet_buffer : public boost::noncopyable
-	{
-		public:
-			static const int BUF_SZ = MTU;
-			char contents[BUF_SZ];
-
-		public:
-			packet_buffer() {
-			}
-
-			~packet_buffer() {
-			}
-	};
-
-	typedef boost::shared_ptr<packet_buffer> packet_buffer_ptr;
 }
 
 

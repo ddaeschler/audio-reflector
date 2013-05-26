@@ -9,6 +9,7 @@
 #define STREAMSUBSCRIBER_H_
 
 #include "ARTypes.h"
+#include "PacketBuffer.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>

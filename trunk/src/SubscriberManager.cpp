@@ -6,6 +6,7 @@
  */
 
 #include "SubscriberManager.h"
+#include "PacketizedSamples.h"
 
 #include <boost/foreach.hpp>
 #include <boost/bind.hpp>
@@ -95,12 +96,12 @@ namespace audioreflector
 
 	}
 
-	void SubscriberManager::enqueueOrSend(EncodedSamplesPtr samples)
+	void SubscriberManager::enqueueOrSend(PacketizedSamplesPtr samples)
 	{
 		_ioService.post(boost::bind(&SubscriberManager::serializedEnqueueOrSend, this, samples));
 	}
 
-	void SubscriberManager::serializedEnqueueOrSend(EncodedSamplesPtr samples)
+	void SubscriberManager::serializedEnqueueOrSend(PacketizedSamplesPtr samples)
 	{
 		if (_isSending) {
 			_waitingSamples.push(samples);
@@ -122,8 +123,8 @@ namespace audioreflector
 	void SubscriberManager::sendSampleToClient()
 	{
 		if (_currentClient != _subscribers.end()) {
-			EncodedSamplesPtr samples = _waitingSamples.front();
-			_currentClient->second->sendData(samples->Samples, samples->EncodedSize);
+			PacketizedSamplesPtr samples = _waitingSamples.front();
+			_currentClient->second->sendData(samples->Samples, samples->Size);
 
 		} else {
 			this->performPendingUnsubscribes();

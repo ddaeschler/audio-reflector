@@ -13,9 +13,11 @@
 #include <boost/thread.hpp>
 
 #include "ARTypes.h"
+
 #include "EncodedSamples.h"
 #include "IEncoder.h"
 #include "ConcurrentQueue.h"
+#include "EncoderBuffer.h"
 
 namespace audioreflector
 {
@@ -29,7 +31,7 @@ namespace audioreflector
 	struct EncoderQueueItem
 	{
 	public:
-		packet_buffer_ptr Buffer;
+		encoder_buffer_ptr Buffer;
 		int NumSamples;
 		int SampleRate;
 
@@ -56,7 +58,7 @@ namespace audioreflector
 		/**
 		 * Enqueues a buffer of raw samples to be encoded
 		 */
-		void enqueue(packet_buffer_ptr buffer, int numSamples, int sampleRate);
+		void enqueue(encoder_buffer_ptr buffer, int numSamples, int sampleRate);
 
 		/**
 		 * Starts the encoder thread

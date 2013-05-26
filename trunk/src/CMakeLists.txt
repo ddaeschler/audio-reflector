@@ -7,6 +7,6 @@ find_package(Boost COMPONENTS thread system REQUIRED)
 include_directories(${PORTAUDIO_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} )
 set(LIBS ${LIBS} ${PORTAUDIO_LIBRARIES} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY} "wavpack")
 
-set ( Reflector_srcs Reflector.cpp ARServer.cpp StreamSubscriber.cpp ARClient.cpp EncoderStage.cpp IEncoder.cpp WavPackEncoder.cpp PacketBufferPool.cpp SubscriberManager.cpp IDecoder.cpp WavPackDecoder.cpp )
+set ( Reflector_srcs Reflector.cpp ARServer.cpp StreamSubscriber.cpp ARClient.cpp EncoderStage.cpp IEncoder.cpp WavPackEncoder.cpp PacketBufferPool.cpp SubscriberManager.cpp IDecoder.cpp WavPackDecoder.cpp EncoderBufferPool.cpp )
 ADD_EXECUTABLE( Reflector ${Reflector_srcs})
 target_link_libraries(Reflector ${LIBS})

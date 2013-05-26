@@ -30,7 +30,7 @@ namespace audioreflector
 		virtual ~WavPackEncoder();
 
 		virtual void setFramesReadyCallback(FramesReadyCallback callBack);
-		virtual void encode(packet_buffer_ptr buffer, int numSamples);
+		virtual void encode(encoder_buffer_ptr buffer, int numSamples);
 
 	private:
 		static int RawOutput(void *id, void *data, int32_t bcount);

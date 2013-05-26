@@ -2,7 +2,6 @@
 
 #include "ARTypes.h"
 #include "StreamSubscriber.h"
-#include "ObjectPool.h"
 #include "EncoderStage.h"
 #include "SubscriberManager.h"
 

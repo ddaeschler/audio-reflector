@@ -6,7 +6,9 @@
  */
 
 #include "ARServer.h"
+#include "EncoderBufferPool.h"
 #include "PacketBufferPool.h"
+#include "EncoderBuffer.h"
 
 #include <boost/bind.hpp>
 #include <stdexcept>
@@ -27,6 +29,7 @@ namespace audioreflector
 	 	_subscriberMgr(new SubscriberManager(_ioService, _socket))
 	{
 		PacketBufferPool::getInstance();
+		EncoderBufferPool::getInstance();
 	}
 
 	ARServer::~ARServer()
@@ -125,24 +128,29 @@ namespace audioreflector
 		//packetize the given data using our selected MTU
 		size_t numBytes = framesPerBuffer * BIT_DEPTH_IN_BYTES;
 
-		//calculate the number of buffers we need
-		int reqdBuffers = numBytes / MTU;
-		if (numBytes % MTU > 0) {
+		int halfBuffer = encoder_buffer::BUF_SZ / 2;
+
+		//calculate the number of buffers we need, leaving half the packet buffer empty
+		//to deal with data growing up to 2x in the encoder. This really shouldn't happen
+		//but it seems that for some inputs on wavpack it is possible for the buffer to
+		//at least grow a bit
+		int reqdBuffers = numBytes / halfBuffer;
+		if (numBytes % halfBuffer > 0) {
 			reqdBuffers++;
 		}
 
 		char* inBufferAsCharBuffer = (char*)inputBuffer;
 
 		for (int i = 0; i < reqdBuffers; ++i) {
-			size_t copiedSoFar = i * MTU;
+			size_t copiedSoFar = i * halfBuffer;
 			size_t amtToCopy;
-			if (MTU < numBytes - copiedSoFar) {
-				amtToCopy = MTU;
+			if (halfBuffer < numBytes - copiedSoFar) {
+				amtToCopy = halfBuffer;
 			} else {
 				amtToCopy = numBytes - copiedSoFar;
 			}
 
-			packet_buffer_ptr buffer(PacketBufferPool::getInstance().alloc());
+			encoder_buffer_ptr buffer(EncoderBufferPool::getInstance().alloc());
 			memcpy(buffer->contents, inBufferAsCharBuffer + copiedSoFar, amtToCopy);
 
 			_encoderStage->enqueue(buffer, framesPerBuffer, _sampleRate);
@@ -190,7 +198,26 @@ namespace audioreflector
 
 	void ARServer::onEncodeComplete(EncodedSamplesPtr samples)
 	{
-		_subscriberMgr->enqueueOrSend(samples);
+		//packetize
+		int reqdBuffers = samples->EncodedSize / packet_buffer::BUF_SZ;
+		if (samples->EncodedSize % packet_buffer::BUF_SZ > 0) {
+			reqdBuffers++;
+		}
+
+		for (int i = 0; i < reqdBuffers; ++i) {
+			size_t copiedSoFar = i * packet_buffer::BUF_SZ;
+			size_t amtToCopy;
+			if (packet_buffer::BUF_SZ < samples->EncodedSize - copiedSoFar) {
+				amtToCopy = packet_buffer::BUF_SZ;
+			} else {
+				amtToCopy = samples->EncodedSize - copiedSoFar;
+			}
+
+			PacketizedSamplesPtr pkt(new PacketizedSamples(copiedSoFar, amtToCopy, samples->SampleRate, samples));
+			_subscriberMgr->enqueueOrSend(pkt);
+		}
+
+
 	}
 }
 
