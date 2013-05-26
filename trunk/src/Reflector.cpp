@@ -17,7 +17,7 @@
 
 using namespace std;
 
-const string& VER = "0.1";
+const string& VER = "0.5";
 
 
 void BeginServerMode();
