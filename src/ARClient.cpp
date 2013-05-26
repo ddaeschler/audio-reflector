@@ -32,7 +32,8 @@ namespace audioreflector
 		_subscriptionRenewalTimer(_ioService),
 		_packetBuffer(new char[MTU]),
 		_netBuffer(sampleRate * BIT_DEPTH_IN_BYTES), //1 second network buffer
-		_lastBufferDisplay(boost::posix_time::second_clock::local_time())
+		_lastBufferDisplay(boost::posix_time::second_clock::local_time()),
+		_currentBuildSize(0)
 	{
 
 	}
@@ -219,9 +220,17 @@ namespace audioreflector
 	void ARClient::handleReceive(const boost::system::error_code& error,
 			      std::size_t bytes_transferred)
 	{
+		if (bytes_transferred <= HEADER_SZ) return;
+
+		_builderBuffer.insert(_builderBuffer.end(), _packetBuffer.get() + HEADER_SZ, _packetBuffer.get() + bytes_transferred);
+
+		//header byte one indicates if this is the last packet, if it is not, we wait for the next
+		//packet to complete this block. If it IS, we decode and process
+		if (_packetBuffer.get()[0] == 1)
 		{
 			//copy received data to the circular buffer after decoding
-			decoded_samples samples = _decoder->decode(_packetBuffer.get(), bytes_transferred);
+			decoded_samples samples = _decoder->decode(&_builderBuffer[0], _builderBuffer.size());
+			_builderBuffer.clear();
 
 			boost::mutex::scoped_lock lock(_bufferLock);
 			_netBuffer.insert(_netBuffer.end(), samples.SampleData, samples.SampleData + (samples.NumSamples * BIT_DEPTH_IN_BYTES) );

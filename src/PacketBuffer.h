@@ -16,10 +16,14 @@
 
 namespace audioreflector
 {
+	/**
+	 * Buffer that holds outbound packet data
+	 */
 	struct packet_buffer : public boost::noncopyable
 	{
 		public:
 			static const int BUF_SZ = MTU;
+			static const int BUF_MAX_DATA = MTU - HEADER_SZ;
 			char contents[BUF_SZ];
 
 		public:
