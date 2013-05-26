@@ -88,12 +88,12 @@ namespace audioreflector
 									paInt16,  /* 16 bit audio */
 									_sampleRate,
 									paFramesPerBufferUnspecified,   /* frames per buffer, i.e. the number
-													   of sample frames that PortAudio will
-													   request from the callback. Many apps
-													   may want to use
-													   paFramesPerBufferUnspecified, which
-													   tells PortAudio to pick the best,
-													   possibly changing, buffer size.*/
+																	   of sample frames that PortAudio will
+																	   request from the callback. Many apps
+																	   may want to use
+																	   paFramesPerBufferUnspecified, which
+																	   tells PortAudio to pick the best,
+																	   possibly changing, buffer size.*/
 									&ARClient::PaCallback, /* this is your callback function */
 									static_cast<void*>(this) ); /*This is a pointer that will be passed to
 													   	   	   your callback*/

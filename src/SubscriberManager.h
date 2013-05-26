@@ -9,7 +9,7 @@
 #define SUBSCRIBERMANAGER_H_
 
 #include "StreamSubscriber.h"
-#include "EncodedSamples.h"
+#include "PacketizedSamples.h"
 
 #include <boost/noncopyable.hpp>
 #include <boost/asio.hpp>
@@ -31,7 +31,7 @@ namespace audioreflector
 		typedef std::map<boost::asio::ip::udp::endpoint, StreamSubscriberPtr> SubscriberMap;
 		SubscriberMap _subscribers;
 
-		std::queue<EncodedSamplesPtr> _waitingSamples;
+		std::queue<PacketizedSamplesPtr> _waitingSamples;
 		std::vector<boost::asio::ip::udp::endpoint> _pendingSubscribes;
 		std::vector<boost::asio::ip::udp::endpoint> _pendingUnsubscribes;
 
@@ -52,12 +52,12 @@ namespace audioreflector
 
 		void checkForTimedOutSubscriptions();
 
-		void enqueueOrSend(EncodedSamplesPtr samples);
+		void enqueueOrSend(PacketizedSamplesPtr samples);
 
 	private:
 		void recordSubscription(const boost::asio::ip::udp::endpoint& ep);
 
-		void serializedEnqueueOrSend(EncodedSamplesPtr samples);
+		void serializedEnqueueOrSend(PacketizedSamplesPtr samples);
 		void beginBroadcastSamples();
 		void onAfterSampleSentToClient();
 		void sendSampleToClient();

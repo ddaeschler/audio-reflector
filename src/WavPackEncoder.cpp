@@ -7,11 +7,12 @@
 
 #include "WavPackEncoder.h"
 
-#include "PacketBufferPool.h"
+#include "EncoderBufferPool.h"
 
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <vector>
 
 
 namespace audioreflector
@@ -33,9 +34,8 @@ namespace audioreflector
 	    _config->sample_rate = sampleRate;
 	    _config->channel_mask = 4;
 	    _config->num_channels = 1;
-	    //important: we have to set the maximum samples to account for MTU so we don't
-	    //have to do manual splitting and include a more complex protocol implementation
-	    _config->block_samples = MTU / BIT_DEPTH_IN_BYTES;
+
+	    _config->block_samples = encoder_buffer::BUF_SZ / BIT_DEPTH_IN_BYTES;
 
 	    WavpackSetConfiguration(_wpContext, _config, -1);
 	    WavpackPackInit(_wpContext);
@@ -50,7 +50,7 @@ namespace audioreflector
 		_framesReady = callBack;
 	}
 
-	void WavPackEncoder::encode(packet_buffer_ptr buffer, int numSamples)
+	void WavPackEncoder::encode(encoder_buffer_ptr buffer, int numSamples)
 	{
 		//upconvert the samples to 32 bit integers
 		if (! _tmpBuffer || _tmpBufferSize < numSamples) {
@@ -87,14 +87,16 @@ namespace audioreflector
 
 	int WavPackEncoder::onOutputAvailable(void* data, int32_t bcount)
 	{
-		int32_t sz = bcount < MTU ? bcount : MTU;
+		if (bcount > encoder_buffer::BUF_SZ) {
+			throw std::runtime_error("Wavpack output would overflow the encoder buffer");
+		}
 
-		packet_buffer_ptr buffer(PacketBufferPool::getInstance().alloc());
-		memcpy(buffer->contents, data, sz);
+		encoder_buffer_ptr buffer(EncoderBufferPool::getInstance().alloc());
+		memcpy(buffer->contents, data, bcount);
 
 		EncodedSamplesPtr samples(new EncodedSamples);
 		samples->SampleRate = _sampleRate;
-		samples->EncodedSize = sz;
+		samples->EncodedSize = bcount;
 		samples->Samples = buffer;
 
 		_framesReady(samples);

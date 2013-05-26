@@ -21,7 +21,7 @@ namespace audioreflector
 
 	}
 
-	void EncoderStage::enqueue(packet_buffer_ptr buffer, int numSamples, int sampleRate)
+	void EncoderStage::enqueue(encoder_buffer_ptr buffer, int numSamples, int sampleRate)
 	{
 		EncoderQueueItem queueItem;
 		queueItem.Buffer = buffer;

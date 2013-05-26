@@ -8,14 +8,15 @@
 #ifndef ENCODEDSAMPLES_H_
 #define ENCODEDSAMPLES_H_
 
-#include "ARTypes.h"
+#include "EncoderBuffer.h"
 #include <boost/shared_ptr.hpp>
 
 namespace audioreflector
 {
 	struct EncodedSamples
 	{
-		packet_buffer_ptr Samples;
+		encoder_buffer_ptr Samples;
+
 		int SampleRate;
 		int EncodedSize;
 	};

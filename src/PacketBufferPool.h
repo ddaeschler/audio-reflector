@@ -9,6 +9,7 @@
 #define PACKETBUFFERPOOL_H_
 
 #include "ARTypes.h"
+#include "PacketBuffer.h"
 
 #include <boost/pool/object_pool.hpp>
 #include <boost/thread/mutex.hpp>
