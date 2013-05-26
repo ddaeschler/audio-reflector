@@ -11,6 +11,8 @@
 #include "PacketBufferPool.h"
 #include "EncodedSamples.h"
 
+#include <cassert>
+
 namespace audioreflector
 {
 	/**
@@ -24,10 +26,14 @@ namespace audioreflector
 		int SampleRate;
 		size_t Size;
 
-		PacketizedSamples(size_t start, size_t count, int sampleRate, EncodedSamplesPtr samples) {
+		PacketizedSamples(size_t start, size_t count, int sampleRate, EncodedSamplesPtr sourceSamples) {
+			assert(count < packet_buffer::BUF_SZ);
+
 			SampleRate = sampleRate;
 			Size = count;
 			Samples = PacketBufferPool::getInstance().alloc();
+
+			std::memcpy(Samples->contents, (&sourceSamples->Samples->contents[0]) + start, count);
 		}
 	};
 
