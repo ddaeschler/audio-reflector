@@ -125,7 +125,6 @@ namespace audioreflector
 	                PaStreamCallbackFlags statusFlags)
 	{
 		//broadcast to all clients
-		//packetize the given data using our selected MTU
 		size_t numBytes = framesPerBuffer * BIT_DEPTH_IN_BYTES;
 
 		int halfBuffer = encoder_buffer::BUF_SZ / 2;

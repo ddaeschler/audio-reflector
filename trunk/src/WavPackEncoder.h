@@ -17,6 +17,12 @@ namespace audioreflector
 	class WavPackEncoder : public IEncoder
 	{
 	private:
+		/**
+		 * Wavpack samples per block. Tuning this number to try to achieve as close as possible to MTU
+ 	 	 * with the resulting compressed data without going over (as this incurrs extra header overhead)
+		 */
+		static const int SAMPLES_PER_BLOCK = 700;
+
 		WavpackContext* _wpContext;
 		WavpackConfig* _config;
 		int _sampleRate;
