@@ -94,12 +94,12 @@ void BeginClientMode()
 	getline(cin, reflectorHost);
 
 	cout << "UDP Subscription Port [8889]: ";
-	ushort subscPort;
+	audioreflector::ar_ushort subscPort;
 	getline(cin, line);
 	if (line == "") {
 		subscPort = 8889;
 	} else {
-		subscPort = boost::lexical_cast<ushort>(line);
+		subscPort = boost::lexical_cast<audioreflector::ar_ushort>(line);
 	}
 
 	cout << "Sample Rate [44100]: ";
