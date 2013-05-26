@@ -19,6 +19,8 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <vector>
+
 namespace audioreflector
 {
 	class ARClient
@@ -53,6 +55,9 @@ namespace audioreflector
 		bool _doStop;
 
 		boost::posix_time::ptime _lastBufferDisplay;
+
+		std::vector<char> _builderBuffer;
+		int _currentBuildSize;
 
 	public:
 		ARClient(const std::string& host, ar_ushort port, int sampleRate,

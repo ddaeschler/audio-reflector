@@ -198,21 +198,23 @@ namespace audioreflector
 	void ARServer::onEncodeComplete(EncodedSamplesPtr samples)
 	{
 		//packetize
-		int reqdBuffers = samples->EncodedSize / packet_buffer::BUF_SZ;
-		if (samples->EncodedSize % packet_buffer::BUF_SZ > 0) {
+		int reqdBuffers = samples->EncodedSize / packet_buffer::BUF_MAX_DATA;
+		if (samples->EncodedSize % packet_buffer::BUF_MAX_DATA > 0) {
 			reqdBuffers++;
 		}
 
 		for (int i = 0; i < reqdBuffers; ++i) {
-			size_t copiedSoFar = i * packet_buffer::BUF_SZ;
+			size_t copiedSoFar = i * packet_buffer::BUF_MAX_DATA;
 			size_t amtToCopy;
-			if (packet_buffer::BUF_SZ < samples->EncodedSize - copiedSoFar) {
-				amtToCopy = packet_buffer::BUF_SZ;
+			if (packet_buffer::BUF_MAX_DATA < samples->EncodedSize - copiedSoFar) {
+				amtToCopy = packet_buffer::BUF_MAX_DATA;
 			} else {
 				amtToCopy = samples->EncodedSize - copiedSoFar;
 			}
 
-			PacketizedSamplesPtr pkt(new PacketizedSamples(copiedSoFar, amtToCopy, samples->SampleRate, samples));
+			bool isLast = (i+1) == reqdBuffers;
+
+			PacketizedSamplesPtr pkt(new PacketizedSamples(copiedSoFar, amtToCopy, samples->SampleRate, samples, isLast));
 			_subscriberMgr->enqueueOrSend(pkt);
 		}
 

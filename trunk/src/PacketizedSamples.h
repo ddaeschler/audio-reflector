@@ -32,15 +32,7 @@ namespace audioreflector
 		 */
 		bool IsLastPacket;
 
-		PacketizedSamples(size_t start, size_t count, int sampleRate, EncodedSamplesPtr sourceSamples) {
-			assert(count <= packet_buffer::BUF_SZ);
-
-			SampleRate = sampleRate;
-			Size = count;
-			Samples = PacketBufferPool::getInstance().alloc();
-
-			std::memcpy(Samples->contents, (&sourceSamples->Samples->contents[0]) + start, count);
-		}
+		PacketizedSamples(size_t start, size_t count, int sampleRate, EncodedSamplesPtr sourceSamples, bool lastPacket);
 	};
 
 	typedef boost::shared_ptr<PacketizedSamples> PacketizedSamplesPtr;

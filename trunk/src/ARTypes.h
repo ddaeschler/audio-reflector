@@ -21,6 +21,7 @@ namespace audioreflector
 	const int MTU = 1200;
 	const int BIT_DEPTH = 16;
 	const int BIT_DEPTH_IN_BYTES = 2;
+	const int HEADER_SZ = 8;
 
 	enum ClientSubscriptionStatus
 	{
