@@ -7,6 +7,8 @@
 
 #include "PacketizedSamples.h"
 
+#include <cstring>
+
 namespace audioreflector
 {
 	PacketizedSamples::PacketizedSamples(size_t start, size_t count, int sampleRate,
